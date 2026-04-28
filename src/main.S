@@ -3,7 +3,7 @@
 .global main
 
 main:
-    rcall test
+    rcall usart_init
 
 loop:
     rjmp loop
