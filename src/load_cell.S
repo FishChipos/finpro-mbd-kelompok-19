@@ -5,7 +5,8 @@
 #define __SFR_OFFSET 0
 #include <avr/io.h>
 
-#include "pins.h"
+.include "usart.inc"
+.include "pins.inc"
 
 .global load_cell_init
 .global load_cell_calibrate
@@ -25,11 +26,12 @@ load_cell_calibrate:
     push r18
 
     rcall load_cell_read
-    rcall usart_hex
+    rcall usart_puthex
     mov r16, r17
-    rcall usart_hex
+    rcall usart_puthex
     mov r16, r18
-    rcall usart_hex
+    rcall usart_puthex
+    rcall usart_putnl
     
     pop r18
     pop r17
@@ -47,19 +49,29 @@ load_cell_read:
         rol r17
         rol r18
 
-        ; Should delay here
-
         sbi PORTD, PIN_HX711_PD_SCK
+
+        push r16
+        ldi r16, 1
+        rcall delay_us
+        pop r16
+
         sbic PIND, PIN_HX711_DOUT
         ori r16, 1
 
-        ; Should delay here
+        push r16
+        ldi r16, 1
+        rcall delay_us
+        pop r16
 
         dec r19
         brne 1b
     
     sbi PORTD, PIN_HX711_PD_SCK
-    ; Should delay here
+    push r16
+    ldi r16, 1
+    rcall delay_us
+    pop r16
     cbi PORTD, PIN_HX711_PD_SCK
     
     pop r19

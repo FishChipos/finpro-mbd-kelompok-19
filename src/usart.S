@@ -6,11 +6,10 @@
 .global usart_disable
 .global usart_putc ; Put one character (byte).
 .global usart_puts ; Put a null-terminated string.
+.global usart_putnl ; Put a line break.
+.global usart_putsnl ; Put a null-terminated string and line break.
 .global usart_getc ; Get one character (byte).
-.global usart_hex ; Print a byte as two hexadecimal characters.
-
-#define UCSR0B_CONF \
-    (0b11 << UCSZ00)
+.global usart_puthex ; Print a byte as two hexadecimal characters.
 
 usart_init:
     push r16
@@ -28,8 +27,10 @@ usart_init:
 usart_enable:
     push r16
 
-    ldi r16, (1 << RXEN0) | (1 << TXEN0) | UCSR0B_CONF
+    ldi r16, (1 << RXEN0) | (1 << TXEN0)
     sts UCSR0B, r16
+    ldi r16, (0b11 << UCSZ00)
+    sts UCSR0C, r16
 
     pop r16
     ret
@@ -37,7 +38,7 @@ usart_enable:
 usart_disable:
     push r16
 
-    ldi r16, UCSR0B_CONF
+    clr r16
     sts UCSR0B, r16
 
     pop r16
@@ -61,12 +62,29 @@ usart_puts:
 
     usart_puts_loadc:
         lpm r16, z+
+        tst r16
         breq usart_puts_done
         rcall usart_putc
         rjmp usart_puts_loadc
 
     usart_puts_done:
     pop r16
+    ret
+
+usart_putnl:
+    push r16
+
+    ldi r16, 13
+    rcall usart_putc
+    ldi r16, 10
+    rcall usart_putc
+    
+    pop r16
+    ret
+
+usart_putsnl:
+    rcall usart_puts
+    rcall usart_putnl
     ret
 
 usart_getc:
@@ -82,7 +100,7 @@ usart_getc:
     pop r17
     ret
 
-usart_hex:
+usart_puthex:
     push r17
 
     mov r17, r16
