@@ -7,6 +7,7 @@
 .global usart_putc ; Put one character (byte).
 .global usart_puts ; Put a null-terminated string.
 .global usart_getc ; Get one character (byte).
+.global usart_hex ; Print a byte as two hexadecimal characters.
 
 #define UCSR0B_CONF \
     (0b11 << UCSZ00)
@@ -77,6 +78,26 @@ usart_getc:
         rjmp usart_getc_wait
 
     lds r16, UDR0
+
+    pop r17
+    ret
+
+usart_hex:
+    push r17
+
+    mov r17, r16
+    swap r16
+
+    andi r16, 0b00001111
+    andi r17, 0b00001111
+
+    subi r16, -'0'
+    subi r17, -'0'
+
+    rcall usart_putc
+
+    mov r16, r17
+    rcall usart_putc
 
     pop r17
     ret

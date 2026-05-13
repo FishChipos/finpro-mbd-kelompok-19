@@ -6,10 +6,10 @@
 #include <avr/io.h>
 
 #include "pins.h"
-#include "variables.h"
 
 .global load_cell_init
 .global load_cell_calibrate
+.global load_cell_read
 
 load_cell_init:
     cbi DDRD, PIN_HX711_DOUT
@@ -21,25 +21,51 @@ load_cell_init:
 
 load_cell_calibrate:
     push r16
+    push r17
+    push r18
 
     rcall load_cell_read
+    rcall usart_hex
+    mov r16, r17
+    rcall usart_hex
+    mov r16, r18
+    rcall usart_hex
     
+    pop r18
+    pop r17
     pop r16
     ret
 
 load_cell_read:
-    push r17
+    push r19
     
-    ldi r17, 24
+    ldi r19, 24
     rcall load_cell_wait_ready
     
     1:
-        
+        lsl r16
+        rol r17
+        rol r18
+
+        ; Should delay here
+
+        sbi PORTD, PIN_HX711_PD_SCK
+        sbic PIND, PIN_HX711_DOUT
+        ori r16, 1
+
+        ; Should delay here
+
+        dec r19
+        brne 1b
     
-    pop r17
+    sbi PORTD, PIN_HX711_PD_SCK
+    ; Should delay here
+    cbi PORTD, PIN_HX711_PD_SCK
+    
+    pop r19
     ret
 
 load_cell_wait_ready:
     sbic PIND, PIN_HX711_DOUT
-    rjmp wait_ready
+    rjmp load_cell_wait_ready
     ret

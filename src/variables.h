@@ -1,6 +1,0 @@
-#ifndef VARIABLES_H
-#define VARIABLES_H
-
-#define VAR_CALIBRATION_FACTOR 0x100
-
-#endif
