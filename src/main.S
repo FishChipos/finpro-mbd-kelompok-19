@@ -12,9 +12,6 @@ main:
     ldi r16, 1
     call delay_s
     PRINT_LINE msg_helloworld
-    ldi r16, 255
-    call usart_puthex
-    call usart_putnl
 
 loop:
     call load_cell_calibrate

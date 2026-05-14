@@ -65,6 +65,7 @@ delay_ms:
     pop r16
     ret
 
+; TODO: This could still be more accurate, maybe do set up outside of this function?
 .global delay_us
 delay_us:
     push r16

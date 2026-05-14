@@ -1,7 +1,3 @@
-/*
- * Using HX711 amplifier, which has a rate of 10 Hz. 
- */
-
 #define __SFR_OFFSET 0
 #include <avr/io.h>
 
@@ -47,7 +43,7 @@ load_cell_read:
     clr r19
 
     ; Wait time can be anywhere from 0.2 to 50 us but wont be too accurate anyway since the instructions take time to execute.
-    ldi r16, 10
+    ldi r16, 1
     
     load_cell_read_data:
         lsl r19
