@@ -39,44 +39,42 @@ load_cell_calibrate:
 .global load_cell_read
 load_cell_read:
     push r19
+    push r20
     
-    ldi r19, 24
+    ldi r20, 24
     rcall load_cell_wait_ready
+
+    clr r19
+
+    ; Wait time can be anywhere from 0.2 to 50 us but wont be too accurate anyway since the instructions take time to execute.
+    ldi r16, 10
     
-    1:
-        lsl r16
+    load_cell_read_data:
+        lsl r19
         rol r17
         rol r18
 
-        PRINT_LINE msg_hi
         sbi PORTD, PIN_HX711_PD_SCK
 
-        push r16
-        ldi r16, 1
         call delay_us
-        pop r16
 
         sbic PIND, PIN_HX711_DOUT
-        ori r16, 1
+        ori r19, 1
 
-        PRINT_LINE msg_lo
         cbi PORTD, PIN_HX711_PD_SCK
 
-        push r16
-        ldi r16, 1
         call delay_us
-        pop r16
 
-        dec r19
-        brne 1b
+        dec r20
+        brne load_cell_read_data
     
     sbi PORTD, PIN_HX711_PD_SCK
-    push r16
-    ldi r16, 1
     call delay_us
-    pop r16
     cbi PORTD, PIN_HX711_PD_SCK
     
+    mov r16, r19
+    
+    pop r20
     pop r19
     ret
 
@@ -84,8 +82,3 @@ load_cell_wait_ready:
     sbic PIND, PIN_HX711_DOUT
     rjmp load_cell_wait_ready
     ret
-
-msg_hi: .string "Clock high"
-.balign 2
-msg_lo: .string "Clock low"
-.balign 2

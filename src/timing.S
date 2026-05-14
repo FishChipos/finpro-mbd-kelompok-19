@@ -3,6 +3,7 @@
 
 .global delay_s
 delay_s:
+    push r16
     push r17
     
     clr r17
@@ -29,10 +30,12 @@ delay_s:
     sts TCCR1B, r17
 
     pop r17
+    pop r16
     ret
 
 .global delay_ms
 delay_ms:
+    push r16
     push r17
     
     clr r17
@@ -59,19 +62,21 @@ delay_ms:
     sts TCCR1B, r17
 
     pop r17
+    pop r16
     ret
 
 .global delay_us
 delay_us:
+    push r16
     push r17
     
     clr r17
     sts TCNT1H, r17
     sts TCNT1L, r17
 
-    ldi r17, hi8(16)
+    clr r17
     sts OCR1AH, r17
-    ldi r17, lo8(16)
+    ldi r17, 16
     sts OCR1AL, r17
 
     ldi r17, (1 << WGM12) | (1 << CS10)
@@ -89,4 +94,5 @@ delay_us:
     sts TCCR1B, r17
 
     pop r17
+    pop r16
     ret
