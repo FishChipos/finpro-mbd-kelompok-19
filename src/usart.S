@@ -2,15 +2,6 @@
 #include <avr/io.h>
 
 .global usart_init
-.global usart_enable
-.global usart_disable
-.global usart_putc ; Put one character (byte).
-.global usart_puts ; Put a null-terminated string.
-.global usart_putnl ; Put a line break.
-.global usart_putsnl ; Put a null-terminated string and line break.
-.global usart_getc ; Get one character (byte).
-.global usart_puthex ; Print a byte as two hexadecimal characters.
-
 usart_init:
     push r16
 
@@ -24,6 +15,7 @@ usart_init:
     pop r16
     ret
 
+.global usart_enable
 usart_enable:
     push r16
 
@@ -35,6 +27,7 @@ usart_enable:
     pop r16
     ret
 
+.global usart_disable
 usart_disable:
     push r16
 
@@ -44,6 +37,7 @@ usart_disable:
     pop r16
     ret
 
+.global usart_putc
 usart_putc:
     push r17
 
@@ -57,6 +51,7 @@ usart_putc:
     pop r17
     ret
 
+.global usart_puts
 usart_puts:
     push r16
 
@@ -71,6 +66,7 @@ usart_puts:
     pop r16
     ret
 
+.global usart_putnl
 usart_putnl:
     push r16
 
@@ -82,11 +78,13 @@ usart_putnl:
     pop r16
     ret
 
+.global usart_putsnl
 usart_putsnl:
     rcall usart_puts
     rcall usart_putnl
     ret
 
+.global usart_getc
 usart_getc:
     push r17
 
@@ -100,6 +98,7 @@ usart_getc:
     pop r17
     ret
 
+.global usart_puthex
 usart_puthex:
     push r17
 

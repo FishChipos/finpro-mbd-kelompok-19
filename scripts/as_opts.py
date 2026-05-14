@@ -1,7 +1,8 @@
+# Sets the flags for the assembler to see include files.
+
 Import("env")
 
 if env.IsIntegrationDump():
-    # stop the current script execution
     Return()
 
 includePath = env["PROJECT_DIR"].replace("\\", "/")

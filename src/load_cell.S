@@ -9,9 +9,6 @@
 .include "pins.inc"
 
 .global load_cell_init
-.global load_cell_calibrate
-.global load_cell_read
-
 load_cell_init:
     cbi DDRD, PIN_HX711_DOUT
     cbi PORTD, PIN_HX711_DOUT
@@ -20,6 +17,7 @@ load_cell_init:
 
     ret
 
+.global load_cell_calibrate
 load_cell_calibrate:
     push r16
     push r17
@@ -31,13 +29,14 @@ load_cell_calibrate:
     call usart_puthex
     mov r16, r18
     call usart_puthex
-    rcall usart_putnl
+    call usart_putnl
     
     pop r18
     pop r17
     pop r16
     ret
 
+.global load_cell_read
 load_cell_read:
     push r19
     
@@ -54,7 +53,7 @@ load_cell_read:
 
         push r16
         ldi r16, 1
-        rcall delay_us
+        call delay_us
         pop r16
 
         sbic PIND, PIN_HX711_DOUT
@@ -65,7 +64,7 @@ load_cell_read:
 
         push r16
         ldi r16, 1
-        rcall delay_us
+        call delay_us
         pop r16
 
         dec r19
@@ -74,7 +73,7 @@ load_cell_read:
     sbi PORTD, PIN_HX711_PD_SCK
     push r16
     ldi r16, 1
-    rcall delay_us
+    call delay_us
     pop r16
     cbi PORTD, PIN_HX711_PD_SCK
     
@@ -86,7 +85,7 @@ load_cell_wait_ready:
     rjmp load_cell_wait_ready
     ret
 
-msg_reading: .string "Reading load cell..."
-msg_readdone: .string "Done reading load cell"
-msg_lo: .string "Clock low"
 msg_hi: .string "Clock high"
+.balign 2
+msg_lo: .string "Clock low"
+.balign 2

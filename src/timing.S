@@ -2,9 +2,6 @@
 #include <avr/io.h>
 
 .global delay_s
-.global delay_ms
-.global delay_us
-
 delay_s:
     push r17
     
@@ -34,6 +31,7 @@ delay_s:
     pop r17
     ret
 
+.global delay_ms
 delay_ms:
     push r17
     
@@ -63,6 +61,7 @@ delay_ms:
     pop r17
     ret
 
+.global delay_us
 delay_us:
     push r17
     
