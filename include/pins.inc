@@ -1,2 +1,3 @@
+; D
 .equ PIN_HX711_PD_SCK, 2
 .equ PIN_HX711_DOUT, 3

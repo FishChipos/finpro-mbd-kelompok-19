@@ -54,7 +54,7 @@ usart_putc:
 
     sts UDR0, r16
 
-    pop r16
+    pop r17
     ret
 
 usart_puts:
@@ -108,8 +108,19 @@ usart_puthex:
 
     andi r16, 0b00001111
     andi r17, 0b00001111
+    
+    cpi r16, 10
+    brlo usart_puthex_hi_ascii_adjust
+    subi r16, -('A' - ':')
 
+    usart_puthex_hi_ascii_adjust:
     subi r16, -'0'
+
+    cpi r17, 10
+    brlo usart_puthex_lo_ascii_adjust
+    subi r17, -('A' - ':')
+
+    usart_puthex_lo_ascii_adjust:
     subi r17, -'0'
 
     rcall usart_putc

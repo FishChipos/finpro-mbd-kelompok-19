@@ -26,11 +26,11 @@ load_cell_calibrate:
     push r18
 
     rcall load_cell_read
-    rcall usart_puthex
+    call usart_puthex
     mov r16, r17
-    rcall usart_puthex
+    call usart_puthex
     mov r16, r18
-    rcall usart_puthex
+    call usart_puthex
     rcall usart_putnl
     
     pop r18
@@ -49,6 +49,7 @@ load_cell_read:
         rol r17
         rol r18
 
+        PRINT_LINE msg_hi
         sbi PORTD, PIN_HX711_PD_SCK
 
         push r16
@@ -58,6 +59,9 @@ load_cell_read:
 
         sbic PIND, PIN_HX711_DOUT
         ori r16, 1
+
+        PRINT_LINE msg_lo
+        cbi PORTD, PIN_HX711_PD_SCK
 
         push r16
         ldi r16, 1
@@ -81,3 +85,8 @@ load_cell_wait_ready:
     sbic PIND, PIN_HX711_DOUT
     rjmp load_cell_wait_ready
     ret
+
+msg_reading: .string "Reading load cell..."
+msg_readdone: .string "Done reading load cell"
+msg_lo: .string "Clock low"
+msg_hi: .string "Clock high"

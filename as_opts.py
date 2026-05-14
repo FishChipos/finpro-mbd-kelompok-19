@@ -8,6 +8,5 @@ includePath = env["PROJECT_DIR"].replace("\\", "/")
 includePath = f"{includePath}/include"
 
 env.Append(ASFLAGS=[
-    f"-Wa,-I{includePath}",
+    f"-Wa,-I\"{includePath}\"",
 ])
-
