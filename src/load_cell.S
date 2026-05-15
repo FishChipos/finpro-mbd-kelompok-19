@@ -22,19 +22,19 @@ load_cell_calibrate:
     push r18
 
     rcall load_cell_read
-    cpi r16, 0b10000000
+    cpi r18, 0b10000000
     brlo 1f
     push r16
     ldi r16, '-'
     call usart_putc
-    pop r16
-    subi r16, 0b10000000
+    subi r18, 0b10000000
 
     1:
+    mov r16, r18
     call usart_puthex
     mov r16, r17
     call usart_puthex
-    mov r16, r18
+    pop r16
     call usart_puthex
     call usart_putnl
     

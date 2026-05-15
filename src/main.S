@@ -14,16 +14,14 @@ main:
     call lcd_init
     DELAY 1 * S
     USART_PRINT_LINE msg_helloworld
-    LCD_PRINT msg_lcdtest
-    DELAY 1 * S
-    call lcd_clear
+    ldi r16, 2
+    ldi r17, 0
+    call lcd_move
+    LCD_PRINT msg_calibrate
 
 loop:
-    call load_cell_calibrate
-    ldi r16, 1
-    call delay_s
     rjmp loop
 
 msg_helloworld: .string "Hello, world!"
-msg_lcdtest: .string "This is a very long string, look at me being really not short"
+msg_calibrate: .string "Read value: "
 .balign 2

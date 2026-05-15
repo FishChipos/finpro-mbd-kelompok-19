@@ -100,6 +100,7 @@ usart_getc:
 
 .global usart_puthex
 usart_puthex:
+    push r16
     push r17
 
     mov r17, r16
@@ -128,4 +129,5 @@ usart_puthex:
     rcall usart_putc
 
     pop r17
+    pop r16
     ret

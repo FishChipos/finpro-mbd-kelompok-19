@@ -106,6 +106,7 @@ lcd_clear:
 
     rcall twi_lcd_address
 
+    ldi r17, (1 << BT)
     ldi r16, 0b00000001
     rcall lcd_write
     ldi r16, 25
@@ -116,6 +117,50 @@ lcd_clear:
     pop r16
     ret
     
+; 0x00 to 0x13, 0x40 to 0x53, 0x14 to 0x27, and 0x54 to 0x67
+; 00 01 10 11
+.global lcd_move
+lcd_move:
+    push r16
+    push r17
+    push r18
+
+    clr r18
+
+    sbrs r16, 0
+    rjmp lcd_move_odd
+    rjmp lcd_move_even
+
+    lcd_move_odd:
+        sbrc r16, 1
+        subi r18, -0x14
+        add r18, r17
+        rjmp lcd_move_instr
+
+    lcd_move_even:
+        subi r18, -0x40
+        sbrc r16, 1
+        subi r18, -0x14
+        add r18, r17
+        rjmp lcd_move_instr
+
+    lcd_move_instr:
+    rcall twi_start
+
+    rcall twi_lcd_address
+
+    ldi r17, (1 << BT)
+    mov r16, r18
+    ori r16, 0b10000000
+    rcall lcd_write
+
+    rcall twi_stop
+    
+    pop r18
+    pop r17
+    pop r16
+    ret
+
 .global lcd_putc
 lcd_putc:
     push r17
@@ -153,6 +198,48 @@ lcd_puts:
     2:
     rcall twi_stop
 
+    pop r17
+    pop r16
+    ret
+
+.global lcd_puthex
+lcd_puthex:
+    push r16
+    push r17
+    push r18
+
+    mov r18, r16
+    swap r16
+
+    andi r16, 0b00001111
+    andi r18, 0b00001111
+    
+    cpi r16, 10
+    brlo lcd_puthex_hi_ascii_adjust
+    subi r16, -('A' - ':')
+
+    lcd_puthex_hi_ascii_adjust:
+    subi r16, -'0'
+
+    cpi r18, 10
+    brlo lcd_puthex_lo_ascii_adjust
+    subi r18, -('A' - ':')
+
+    lcd_puthex_lo_ascii_adjust:
+    subi r18, -'0'
+
+    rcall twi_start
+
+    rcall twi_lcd_address
+
+    ldi r17, (1 << BT) | (1 << RS)
+    rcall lcd_write
+    mov r16, r18
+    rcall lcd_write
+
+    rcall twi_stop
+
+    pop r18
     pop r17
     pop r16
     ret
