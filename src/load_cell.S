@@ -1,3 +1,5 @@
+/* Load cell with HX711 amplifier. */
+
 #define __SFR_OFFSET 0
 #include <avr/io.h>
 
@@ -20,6 +22,15 @@ load_cell_calibrate:
     push r18
 
     rcall load_cell_read
+    cpi r16, 0b10000000
+    brlo 1f
+    push r16
+    ldi r16, '-'
+    call usart_putc
+    pop r16
+    subi r16, 0b10000000
+
+    1:
     call usart_puthex
     mov r16, r17
     call usart_puthex

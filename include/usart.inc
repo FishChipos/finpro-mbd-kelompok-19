@@ -1,12 +1,12 @@
-.macro PRINT addr
+.macro USART_PRINT addr
     ldi zh, hi8(\addr)
     ldi zl, lo8(\addr)
-    rcall usart_puts
+    call usart_puts
 .endm
 
-.macro PRINT_LINE addr
+.macro USART_PRINT_LINE addr
     ldi zh, hi8(\addr)
     ldi zl, lo8(\addr)
-    rcall usart_putsnl
+    call usart_putsnl
 .endm
 
