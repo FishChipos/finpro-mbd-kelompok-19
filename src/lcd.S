@@ -118,7 +118,6 @@ lcd_clear:
     ret
     
 ; 0x00 to 0x13, 0x40 to 0x53, 0x14 to 0x27, and 0x54 to 0x67
-; 00 01 10 11
 .global lcd_move
 lcd_move:
     push r16
@@ -127,24 +126,13 @@ lcd_move:
 
     clr r18
 
-    sbrs r16, 0
-    rjmp lcd_move_odd
-    rjmp lcd_move_even
+    sbrc r16, 0
+    subi r18, -0x40
+    sbrc r16, 1
+    subi r18, -0x14
 
-    lcd_move_odd:
-        sbrc r16, 1
-        subi r18, -0x14
-        add r18, r17
-        rjmp lcd_move_instr
+    add r18, r17
 
-    lcd_move_even:
-        subi r18, -0x40
-        sbrc r16, 1
-        subi r18, -0x14
-        add r18, r17
-        rjmp lcd_move_instr
-
-    lcd_move_instr:
     rcall twi_start
 
     rcall twi_lcd_address
