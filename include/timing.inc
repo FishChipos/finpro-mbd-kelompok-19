@@ -16,6 +16,7 @@
     pop r16
 .endm
 
+; Use these to easily determine the delay units.
 .equ S, 1000000
 .equ MS, 1000
 .equ US, 1

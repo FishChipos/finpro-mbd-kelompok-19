@@ -1,9 +1,10 @@
 #define __SFR_OFFSET 0
 #include <avr/io.h>
 
+; These functions are meant to be used with the macro in timing.inc, so they do not save the state of r16 by themselves.
+
 .global delay_s
 delay_s:
-    push r16
     push r17
     
     clr r17
@@ -30,12 +31,10 @@ delay_s:
     sts TCCR1B, r17
 
     pop r17
-    pop r16
     ret
 
 .global delay_ms
 delay_ms:
-    push r16
     push r17
     
     clr r17
@@ -62,13 +61,11 @@ delay_ms:
     sts TCCR1B, r17
 
     pop r17
-    pop r16
     ret
 
 ; TODO: This could still be more accurate, maybe do set up outside of this function?
 .global delay_us
 delay_us:
-    push r16
     push r17
     
     clr r17
@@ -95,5 +92,4 @@ delay_us:
     sts TCCR1B, r17
 
     pop r17
-    pop r16
     ret

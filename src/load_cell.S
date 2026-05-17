@@ -5,6 +5,7 @@
 
 .include "usart.inc"
 .include "pins.inc"
+.include "timing.inc"
 
 .global load_cell_init
 load_cell_init:

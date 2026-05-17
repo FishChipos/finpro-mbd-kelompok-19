@@ -5,6 +5,7 @@
 #include <avr/io.h>
 
 .include "twi_addresses.inc"
+.include "timing.inc"
 
 .equ MODE_WRITE, 0
 .equ MODE_READ, 1
@@ -41,8 +42,7 @@ lcd_init:
     ldi r16, (1 << TWEN)
     sts TWCR, r16
 
-    ldi r16, 20
-    call delay_ms
+    DELAY 20 * MS
 
     rcall twi_start
 
@@ -53,30 +53,26 @@ lcd_init:
     rcall twi_write
     ldi r16, 0b00110000 | (1 << BT)
     rcall twi_write
-    ldi r16, 25
-    call delay_ms
+    DELAY 25 * MS
 
     ldi r16, 0b00110000 | (1 << BT) | (1 << E)
     rcall twi_write
     ldi r16, 0b00110000 | (1 << BT)
     rcall twi_write
-    ldi r16, 1
-    call delay_ms
+    DELAY 1 * MS
 
     ldi r16, 0b00110000 | (1 << BT) | (1 << E)
     rcall twi_write
     ldi r16, 0b00110000 | (1 << BT)
     rcall twi_write
-    ldi r16, 1
-    call delay_ms
+    DELAY 1 * MS
 
     ; Then we can set 4-bit mode.
     ldi r16, 0b00100000 | (1 << BT) | (1 << E)
     rcall twi_write
     ldi r16, 0b00100000 | (1 << BT)
     rcall twi_write
-    ldi r16, 1
-    call delay_ms
+    DELAY 1 * MS
 
     ; Then we can set two lines.
     ldi r17, (1 << BT)
@@ -90,8 +86,7 @@ lcd_init:
     ; And a display clear.
     ldi r16, 0b00000001
     rcall lcd_write
-    ldi r16, 25
-    call delay_ms
+    DELAY 25 * MS
     
     rcall twi_stop
 
@@ -109,8 +104,7 @@ lcd_clear:
     ldi r17, (1 << BT)
     ldi r16, 0b00000001
     rcall lcd_write
-    ldi r16, 25
-    call delay_ms
+    DELAY 25 * MS
     
     rcall twi_stop
 
@@ -246,8 +240,7 @@ lcd_write:
     rcall twi_write
     andi r16, ~(1 << E)
     rcall twi_write
-    ldi r16, 1
-    call delay_ms
+    DELAY 1 * MS
     
     mov r16, r18
     ori r16, (1 << E)
@@ -255,8 +248,7 @@ lcd_write:
     rcall twi_write
     andi r16, ~(1 << E)
     rcall twi_write
-    ldi r16, 1
-    call delay_ms
+    DELAY 1 * MS
 
     pop r18
     pop r16
