@@ -7,9 +7,10 @@
 
 ; MFRC522 registers and important bits.
 .equ REG_CMD, 0x01
+.equ CMD_POWERDOWN, 4
 .equ CMD_IDLE, 0b0000
 .equ CMD_TRANSCEIVE, 0b1100
-.equ CMD_SOFT_RESET, 0b1111
+.equ CMD_SOFTRESET, 0b1111
 
 .equ REG_TXCONTROL, 0x14
 .equ TXCONTROL_TX2RFE, 1
@@ -24,11 +25,24 @@
 .equ BITFRAMING_TXLASTBITS, 0
 .equ BITFRAMING_STARTSEND, 7
 
+.equ REG_COMIEN, 0x02
+.equ COMIEN_TIMER, 0
+.equ COMIEN_RX, 5
+
 .equ REG_COMIRQ, 0x04
 .equ COMIRQ_TIMER, 0
 .equ COMIRQ_RX, 5
 
 .equ REG_VERSION, 0x37
+.equ REG_ERROR, 0x06
+
+.equ REG_TMODE, 0x2A
+.equ TMODE_PRESCALERHI, 0
+.equ TMODE_AUTO, 7
+
+.equ REG_TPRESCALER, 0x2B
+.equ REG_TRELOADHI, 0x2C
+.equ REG_TRELOADLO, 0x2D
 
 ; Commands used for the protocol described in ISO 14443.
 .equ PCMD_REQA, 0x26
@@ -60,13 +74,24 @@ rfid_init:
     out SPCR, r16
 
     rcall rfid_reset
-    RFID_WRITE REG_CMD, CMD_SOFT_RESET
+    RFID_WRITE REG_CMD, CMD_SOFTRESET
+
+    1:
+        RFID_READ REG_CMD
+        sbrc r16, CMD_POWERDOWN
+        rjmp 1b
 
     USART_PRINT msg_rfid_init_version
     RFID_READ REG_VERSION
     call usart_puthex
+    call usart_putnl
 
     RFID_WRITE REG_TXCONTROL, (1 << TXCONTROL_TX2RFE) | (1 << TXCONTROL_TX1RFE)
+    RFID_WRITE REG_COMIEN, (1 << COMIEN_RX) | (1 << COMIEN_TIMER)
+    RFID_WRITE REG_TMODE, (1 << TMODE_AUTO)
+    RFID_WRITE REG_TPRESCALER, 0b11000000
+    RFID_WRITE REG_TRELOADHI, 0x03
+    RFID_WRITE REG_TRELOADLO, 0xE8
 
     USART_PRINT_LINE msg_rfid_init_done
 
@@ -80,10 +105,6 @@ msg_rfid_init_done: .string "RFID initialized."
 
 .global rfid_detect
 rfid_detect:
-    push r16
-    push r17
-    push r18
-    push r19
     push r20
     push r21
     push r22
@@ -93,14 +114,13 @@ rfid_detect:
     RFID_WRITE REG_FIFOLEVEL, 1 << FIFOLEVEL_FLUSHBUFFER
     RFID_WRITE REG_BITFRAMING, 0b111 << BITFRAMING_TXLASTBITS
     RFID_WRITE REG_FIFODATA, PCMD_REQA
+    RFID_WRITE REG_COMIRQ, 0x7F
     RFID_WRITE REG_CMD, CMD_TRANSCEIVE
     RFID_WRITE REG_BITFRAMING, (1 << BITFRAMING_STARTSEND) | (0b111 << BITFRAMING_TXLASTBITS)
 
     rcall rfid_wait_rxirq
     sbrc r16, 0
     rjmp rfid_detect_reqa_fail
-
-    RFID_WRITE REG_CMD, CMD_IDLE
 
     RFID_READ REG_FIFODATA
     mov r17, r16
@@ -112,6 +132,7 @@ rfid_detect:
     RFID_WRITE REG_FIFODATA, PCMD_SEL
     RFID_WRITE REG_FIFODATA, 2 << 4
 
+    RFID_WRITE REG_COMIRQ, 0x7F
     RFID_WRITE REG_CMD, CMD_TRANSCEIVE
     RFID_WRITE REG_BITFRAMING, 1 << BITFRAMING_STARTSEND
 
@@ -119,35 +140,52 @@ rfid_detect:
     sbrc r16, 0
     rjmp rfid_detect_anticollision_fail
 
-    RFID_WRITE REG_CMD, CMD_IDLE
+    ; For some unholy reason doing this with the subroutine one assertion at a time skips every other byte.
+    cbi PORTB, PIN_MFRC522_SS
 
-    RFID_READ REG_FIFODATA
+    ldi r16, (REG_FIFODATA << 1) | (1 << 7)
+    rcall spi_transfer
+
+    clr r16
+    rcall spi_transfer
     mov r22, r16
-    RFID_READ REG_FIFODATA
+
+    clr r16
+    rcall spi_transfer
     mov r21, r16
-    RFID_READ REG_FIFODATA
+
+    clr r16
+    rcall spi_transfer
     mov r20, r16
-    RFID_READ REG_FIFODATA
+
+    clr r16
+    rcall spi_transfer
     mov r19, r16
-    RFID_READ REG_FIFODATA
+
+    clr r16
+    rcall spi_transfer
     mov r18, r16
+
+    sbi PORTB, PIN_MFRC522_SS
 
     USART_PRINT msg_rfid_detect_uid
     mov r16, r22
     call usart_puthex
-    eor r16, r21
+    mov r16, r21
     call usart_puthex
-    eor r16, r20
+    mov r16, r20
     call usart_puthex
-    eor r16, r19
-    call usart_puthex
-    cp r16, r18
-    brne rfid_detect_bcc_fail
-    
-    mov r16, r18
+    mov r16, r19
     call usart_puthex
     call usart_putnl
 
+    mov r16, r22
+    eor r16, r21
+    eor r16, r20
+    eor r16, r19
+    cp r16, r18
+    brne rfid_detect_bcc_fail
+    
     RFID_WRITE REG_FIFOLEVEL, 1 << FIFOLEVEL_FLUSHBUFFER
     RFID_WRITE REG_FIFODATA, PCMD_SEL
     RFID_WRITE REG_FIFODATA, 7 << 4
@@ -172,14 +210,13 @@ rfid_detect:
     mov r17, r18
     rcall rfid_write
 
+    RFID_WRITE REG_COMIRQ, 0x7F
     RFID_WRITE REG_CMD, CMD_TRANSCEIVE
     RFID_WRITE REG_BITFRAMING, 1 << BITFRAMING_STARTSEND
 
     rcall rfid_wait_rxirq
     sbrc r16, 0
     rjmp rfid_detect_select_fail
-
-    RFID_WRITE REG_CMD, CMD_IDLE
 
     USART_PRINT msg_rfid_detect_sak
     RFID_READ REG_FIFODATA
@@ -190,6 +227,9 @@ rfid_detect:
 
     rfid_detect_reqa_fail:
         USART_PRINT_LINE msg_rfid_detect_reqa_fail
+        RFID_READ REG_ERROR
+        call usart_puthex
+        call usart_putnl
         rjmp rfid_detect_done
 
     rfid_detect_anticollision_fail:
@@ -212,15 +252,15 @@ rfid_detect:
         rjmp rfid_detect_done
 
     rfid_detect_done:
+    mov r16, r19
+    mov r17, r20
+    mov r18, r21
+    mov r19, r22
     USART_PRINT_LINE msg_rfid_detect_done
 
     pop r22
     pop r21
     pop r20
-    pop r19
-    pop r18
-    pop r17
-    pop r16
     ret
 
 msg_rfid_detect_start: .string "RFID detect starting..."
@@ -238,15 +278,13 @@ msg_rfid_detect_done: .string "RFID detect done."
 rfid_wait_rxirq:
     1:
         RFID_READ REG_COMIRQ
-        sbrc r16, COMIRQ_TIMER
+        sbrs r16, COMIRQ_TIMER
         rjmp 2f
-        sbrs r16, COMIRQ_RX
-        rjmp 1b
-        rjmp 3f
-    2:
         ldi r16, 1
         ret
-    3:
+    2:
+        sbrs r16, COMIRQ_RX
+        rjmp 1b
         clr r16
         ret
 
@@ -273,8 +311,6 @@ rfid_write:
     ret
 
 rfid_read:
-    push r16
-
     cbi PORTB, PIN_MFRC522_SS
 
     lsl r16
@@ -288,14 +324,13 @@ rfid_read:
     rcall spi_transfer
 
     sbi PORTB, PIN_MFRC522_SS
-
-    pop r16
     ret
 
 rfid_reset:
     cbi PORTB, PIN_MFRC522_RST
-    DELAY 10 * US
+    DELAY 50 * MS
     sbi PORTB, PIN_MFRC522_RST
+    DELAY 50 * MS
 
     ret
 
