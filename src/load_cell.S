@@ -9,12 +9,20 @@
 
 .global load_cell_init
 load_cell_init:
+    USART_PRINT_LINE msg_load_cell_init_start
+
     cbi DDRD, PIN_HX711_DOUT
     cbi PORTD, PIN_HX711_DOUT
     sbi DDRD, PIN_HX711_PD_SCK
     cbi PORTD, PIN_HX711_PD_SCK
 
+    USART_PRINT_LINE msg_load_cell_init_done
+
     ret
+
+msg_load_cell_init_start: .string "Initializing load cell..."
+msg_load_cell_init_done: .string "Load cell initialized."
+.balign 2
 
 .global load_cell_calibrate
 load_cell_calibrate:

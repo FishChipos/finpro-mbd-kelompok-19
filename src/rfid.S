@@ -49,6 +49,8 @@
 rfid_init:
     push r16
 
+    USART_PRINT_LINE msg_rfid_init_start
+
     ldi r16, (1 << PIN_MFRC522_SCK) | (1 << PIN_MFRC522_MOSI) | (1 << PIN_MFRC522_SS) | (1 << PIN_MFRC522_RST)
     out DDRB, r16
 
@@ -60,13 +62,21 @@ rfid_init:
     rcall rfid_reset
     RFID_WRITE REG_CMD, CMD_SOFT_RESET
 
+    USART_PRINT msg_rfid_init_version
     RFID_READ REG_VERSION
     call usart_puthex
 
     RFID_WRITE REG_TXCONTROL, (1 << TXCONTROL_TX2RFE) | (1 << TXCONTROL_TX1RFE)
 
+    USART_PRINT_LINE msg_rfid_init_done
+
     pop r16
     ret
+
+msg_rfid_init_start: .string "Initializing RFID..."
+msg_rfid_init_version: .string "RFID version: "
+msg_rfid_init_done: .string "RFID initialized."
+.balign 2
 
 .global rfid_detect
 rfid_detect:
@@ -122,12 +132,21 @@ rfid_detect:
     RFID_READ REG_FIFODATA
     mov r18, r16
 
+    USART_PRINT msg_rfid_detect_uid
     mov r16, r22
+    call usart_puthex
     eor r16, r21
+    call usart_puthex
     eor r16, r20
+    call usart_puthex
     eor r16, r19
+    call usart_puthex
     cp r16, r18
     brne rfid_detect_bcc_fail
+    
+    mov r16, r18
+    call usart_puthex
+    call usart_putnl
 
     RFID_WRITE REG_FIFOLEVEL, 1 << FIFOLEVEL_FLUSHBUFFER
     RFID_WRITE REG_FIFODATA, PCMD_SEL
@@ -162,6 +181,7 @@ rfid_detect:
 
     RFID_WRITE REG_CMD, CMD_IDLE
 
+    USART_PRINT msg_rfid_detect_sak
     RFID_READ REG_FIFODATA
     call usart_puthex
     call usart_putnl
@@ -178,8 +198,10 @@ rfid_detect:
 
     rfid_detect_bcc_fail:
         USART_PRINT_LINE msg_rfid_detect_bcc_fail
+        USART_PRINT msg_rfid_detect_bcc_actual
         call usart_puthex
         call usart_putnl
+        USART_PRINT msg_rfid_detect_bcc_expected
         mov r16, r18
         call usart_puthex
         call usart_putnl
@@ -202,9 +224,13 @@ rfid_detect:
     ret
 
 msg_rfid_detect_start: .string "RFID detect starting..."
+msg_rfid_detect_uid: .string "UID: "
+msg_rfid_detect_sak: .string "SAK: "
 msg_rfid_detect_reqa_fail: .string "REQA failed!"
 msg_rfid_detect_anticollision_fail: .string "Anticollision failed!"
 msg_rfid_detect_bcc_fail: .string "BCC check failed!"
+msg_rfid_detect_bcc_actual: .string "Actual BCC: "
+msg_rfid_detect_bcc_expected: .string "Expected BCC: "
 msg_rfid_detect_select_fail: .string "SELECT failed!"
 msg_rfid_detect_done: .string "RFID detect done."
 .balign 2

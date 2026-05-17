@@ -1,6 +1,8 @@
 #define __SFR_OFFSET 0
 #include <avr/io.h>
 
+.include "usart.inc"
+
 .global usart_init
 usart_init:
     push r16
@@ -12,8 +14,13 @@ usart_init:
     ldi r16, lo8(8)
     sts UBRR0L, r16
 
+    USART_PRINT_LINE msg_usart_init_done
+
     pop r16
     ret
+
+msg_usart_init_done: .string "USART initialized."
+.balign 2
 
 .global usart_enable
 usart_enable:

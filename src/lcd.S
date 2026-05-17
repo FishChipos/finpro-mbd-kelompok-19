@@ -6,6 +6,7 @@
 
 .include "twi_addresses.inc"
 .include "timing.inc"
+.include "usart.inc"
 
 .equ MODE_WRITE, 0
 .equ MODE_READ, 1
@@ -33,6 +34,8 @@
 .global lcd_init
 lcd_init:
     push r16
+
+    USART_PRINT_LINE msg_lcd_init_start
 
     ; These settings should result in a SCL of 25 kHz.
     ldi r16, 156
@@ -90,8 +93,14 @@ lcd_init:
     
     rcall twi_stop
 
+    USART_PRINT_LINE msg_lcd_init_done
+
     pop r16
     ret
+
+msg_lcd_init_start: .string "Initializing LCD..."
+msg_lcd_init_done: .string "LCD initialized."
+.balign 2
 
 .global lcd_clear
 lcd_clear:

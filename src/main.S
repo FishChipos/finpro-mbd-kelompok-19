@@ -10,8 +10,9 @@
 .global main
 main:
     call usart_init
-    call load_cell_init
     call lcd_init
+    call load_cell_init
+    call rfid_init
     DELAY 1 * S
     USART_PRINT_LINE msg_helloworld
     ldi r16, 2
@@ -20,6 +21,8 @@ main:
     LCD_PRINT msg_calibrate
 
 loop:
+    call rfid_detect
+    DELAY 1 * S
     rjmp loop
 
 msg_helloworld: .string "Hello, world!"
