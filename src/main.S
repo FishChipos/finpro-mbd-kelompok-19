@@ -33,11 +33,11 @@ loop:
     LCD_PRINT msg_weight
     push r16
     mov r16, r18
-    call load_puthex
+    call lcd_puthex
     mov r16, r17
-    call load_puthex
+    call lcd_puthex
     pop r16
-    call load_puthex
+    call lcd_puthex
     LCD_PRINT msg_weight_unit
     DELAY 1 * S
     rjmp loop
