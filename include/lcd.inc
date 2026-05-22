@@ -8,8 +8,8 @@
     push r16
     push r17
 
-    ldi r16, row
-    ldi r17, column
+    ldi r16, \row
+    ldi r17, \column
     call lcd_move
 
     pop r17
